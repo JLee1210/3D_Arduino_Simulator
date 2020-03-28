@@ -11,7 +11,7 @@ function init() {
   const near = 0.1;
   const far = 100;
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  camera.position.set(20, 20, 20);
+  camera.position.set(0, 0, 100);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color("black");
@@ -156,7 +156,6 @@ function init() {
     }
     return needResize;
   }
-
   function render() {
     if (resizeRendererToDisplaySize(renderer)) {
       const canvas = renderer.domElement;
@@ -164,8 +163,13 @@ function init() {
       camera.updateProjectionMatrix();
     }
     if (typeof sice !== "undefined") {
-      console.log(sice);
-      sice.rotateX(0.01);
+      console.log(sice.position.x == 15);
+      if (sice.position.y >= 2) {
+        const pos_y = sice.position.y;
+        sice.position.set(0, -pos_y, 0);
+      }
+      sice.translateY(0.005);
+      //camera.translateY(-0.01);
     }
     renderer.render(scene, camera);
     requestAnimationFrame(render);
