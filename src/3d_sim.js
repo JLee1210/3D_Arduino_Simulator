@@ -1,5 +1,5 @@
-import * as THREE from "../three.js/build/three.module.js";
-import { OBJLoader2 } from "../three.js/examples/jsm/loaders/OBJLoader2.js";
+import * as THREE from "../node_modules/three/build/three.module.js";
+import { OBJLoader2 } from "../node_modules/three/examples/jsm/loaders/OBJLoader2.js";
 
 function init() {
   const canvas = document.querySelector("#grid");
