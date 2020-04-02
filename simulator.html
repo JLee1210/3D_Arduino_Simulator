@@ -3,20 +3,37 @@
   <head>
     <meta charset="utf-8" />
     <title>3D Simulator</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
     <style>
       body {
         margin: 0;
       }
       canvas {
-        width: 30%;
-        height: 30%;
+        width: 50%;
+        height: 100%;
         display: block;
+        border: 1px solid #127a82;
+        outline: none;
       }
     </style>
   </head>
-
   <body>
     <script type="module" src="/src/3d_sim.js"></script>
-    <canvas id="grid"></canvas>
+    <div>
+      <canvas id="grid"></canvas>
+      <div class="mt-1 w-50 d-flex justify-content-around">
+        <button type="button" class="btn btn-light btn-lg" id="anim1">
+          Play Animation 1
+        </button>
+        <button type="button" class="btn btn-light btn-lg" id="anim2">
+          Play Animation 2
+        </button>
+      </div>
+    </div>
   </body>
 </html>

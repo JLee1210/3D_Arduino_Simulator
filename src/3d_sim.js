@@ -1,56 +1,67 @@
 import * as THREE from "../node_modules/three/build/three.module.js";
 import { PLYLoader } from "../node_modules/three/examples/jsm/loaders/PLYLoader.js";
+import { OrbitControls } from "../node_modules/three/examples/jsm/controls/OrbitControls.js";
 
 const canvas = document.querySelector("#grid");
 
-const fov = 80; // field of view
+const fov = 60; // field of view
 const aspect = window.innerWidth / window.innerHeight; // display aspect (default: 300x150)
 const near = 1;
 const far = 1000;
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+const controls = new OrbitControls(camera, canvas);
 
 const scene = new THREE.Scene();
 
 const renderer = new THREE.WebGLRenderer({ canvas });
 
 let horn;
-let animate = true;
+const animations = [];
+animations.push(false);
+animations.push(false);
 
 init();
-animateCounterClockwise((90 * Math.PI) / 180);
+document.getElementById("anim1").onclick = function() {
+  document.getElementById("anim" + (1).toString()).disabled = true;
+  animations[0] = true;
+  animations.forEach((val, index) => {
+    if (index !== 0) {
+      animations[index] = false;
+      document.getElementById("anim" + (index + 1).toString()).disabled = false;
+    }
+  });
+  horn.rotation.y = 0;
+  animateClockwise((90 * Math.PI) / 180);
+};
+
+document.getElementById("anim2").onclick = function() {
+  document.getElementById("anim" + (2).toString()).disabled = true;
+  animations[1] = true;
+  animations.forEach((val, index) => {
+    if (index !== 1) {
+      animations[index] = false;
+      document.getElementById("anim" + (index + 1).toString()).disabled = false;
+    }
+  });
+  horn.rotation.y = 0;
+  animateCounterClockwise((90 * Math.PI) / 180);
+};
 
 function init() {
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(500, 300);
-  //renderer.setSize(400, 300);
-
   camera.position.z = 50;
+  if (resizeRendererToDisplaySize(renderer)) {
+    const canvas = renderer.domElement;
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.updateProjectionMatrix();
+  }
+
+  controls.target.set(0, 5, 0);
+  controls.update();
 
   scene.background = new THREE.Color(0xcccccc);
   scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
-  // checkerboard base
-  // {
-  //   const planeSize = 40;
 
-  //   const loader = new THREE.TextureLoader();
-  //   const texture = loader.load(
-  //     "https://threejsfundamentals.org/threejs/resources/images/checker.png"
-  //   );
-  //   texture.wrapS = THREE.RepeatWrapping;
-  //   texture.wrapT = THREE.RepeatWrapping;
-  //   texture.magFilter = THREE.NearestFilter;
-  //   const repeats = planeSize / 2;
-  //   texture.repeat.set(repeats, repeats);
-
-  //   const planeGeo = new THREE.PlaneBufferGeometry(planeSize, planeSize);
-  //   const planeMat = new THREE.MeshPhongMaterial({
-  //     map: texture,
-  //     side: THREE.DoubleSide
-  //   });
-  //   const mesh = new THREE.Mesh(planeGeo, planeMat);
-  //   mesh.rotation.x = Math.PI * -0.5;
-  //   scene.add(mesh);
-  // }
   /*
    * ------------- LIGHTING -----------------
    */
@@ -86,15 +97,6 @@ function init() {
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     scene.add(mesh);
-    // compute the box that contains all the stuff
-    // from root and below
-    // const box = new THREE.Box3().setFromObject(ply);
-
-    // const boxSize = box.getSize(new THREE.Vector3()).length();
-    // const boxCenter = box.getCenter(new THREE.Vector3());
-
-    // // set the camera to frame the box
-    // frameArea(boxSize * 2, boxSize, boxCenter, camera);
   });
 
   plyLoader.load("../ply/horn.ply", ply => {
@@ -134,66 +136,40 @@ function init() {
   /*
    * ------------- LIGHTING ------------
    */
-  //window.addEventListener("resize", onWindowResize, false);
+  window.addEventListener("resize", onWindowResize, false);
+  //animateCounterClockwise((90 * Math.PI) / 180);
+  render();
 }
-// function resizeRendererToDisplaySize(renderer) {
-//   const canvas = renderer.domElement;
-//   const width = canvas.clientWidth;
-//   const height = canvas.clientHeight;
-//   const needResize = canvas.width !== width || canvas.height !== height;
-//   if (needResize) {
-//     renderer.setSize(width, height, false);
-//   }
-//   return needResize;
-// }
 
-// function frameArea(sizeToFitOnScreen, boxSize, boxCenter, camera) {
-//   const halfSizeToFitOnScreen = sizeToFitOnScreen * 0.5;
-//   const halfFovY = THREE.MathUtils.degToRad(camera.fov * 0.5);
-//   const distance = halfSizeToFitOnScreen / Math.tan(halfFovY);
+function resizeRendererToDisplaySize(renderer) {
+  const canvas = renderer.domElement;
+  const pixelRatio = window.devicePixelRatio;
+  const width = (canvas.clientWidth * pixelRatio) | 0;
+  const height = (canvas.clientHeight * pixelRatio) | 0;
+  const needResize = canvas.width !== width || canvas.height !== height;
+  if (needResize) {
+    console.log("sice");
+    renderer.setSize(width, height, false);
+  }
+  return needResize;
+}
 
-//   // compute a unit vector that points in the direction the camera is now
-//   // from the center of the box
-//   const direction = new THREE.Vector3()
-//     .subVectors(camera.position, boxCenter)
-//     .normalize();
-
-//   // move the camera to a position distance units way from the center
-//   // in whatever direction the camera was from the center already
-//   camera.position.copy(direction.multiplyScalar(distance).add(boxCenter));
-
-//   // pick some near and far values for the frustum that
-//   // will contain the box.
-//   camera.near = boxSize / 100;
-//   camera.far = boxSize * 100;
-
-//   camera.updateProjectionMatrix();
-
-//   // point the camera to look at the center of the box
-//   camera.lookAt(boxCenter.x, boxCenter.y, boxCenter.z);
-// }
-
-// function onWindowResize() {
-//   let aspect = window.innerWidth / window.innerHeight;
-
-//   camera.aspect = aspect;
-//   camera.updateProjectionMatrix();
-
-//   renderer.setSize(window.innerWidth, window.innerHeight);
-
-//   controls.handleResize();
-// }
+function onWindowResize() {
+  if (resizeRendererToDisplaySize(renderer)) {
+    const canvas = renderer.domElement;
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.updateProjectionMatrix();
+  }
+  renderer.render(scene, camera);
+}
 
 function animateClockwise(targetRadian) {
-  console.log(targetRadian);
-  if (typeof horn !== "undefined") {
-    if (horn.rotation.y >= -targetRadian) {
-      renderClockwise();
-    } else {
-      animate = false;
-    }
+  if (horn.rotation.y >= -targetRadian) {
+    horn.rotation.y -= 0.01;
+  } else {
+    animations[0] = false;
   }
-  if (animate) {
+  if (animations[0]) {
     requestAnimationFrame(() => {
       animateClockwise(targetRadian);
     });
@@ -201,26 +177,19 @@ function animateClockwise(targetRadian) {
 }
 
 function animateCounterClockwise(targetRadian) {
-  if (typeof horn !== "undefined") {
-    if (horn.rotation.y <= targetRadian) {
-      renderCounterClockwise();
-    } else {
-      animate = false;
-    }
+  if (horn.rotation.y <= targetRadian) {
+    horn.rotation.y += 0.01;
+  } else {
+    animations[1] = false;
   }
-  if (animate) {
+  if (animations[1]) {
     requestAnimationFrame(() => {
       animateCounterClockwise(targetRadian);
     });
   }
 }
 
-function renderClockwise() {
-  horn.rotation.y -= 0.01;
+function render() {
   renderer.render(scene, camera);
-}
-
-function renderCounterClockwise() {
-  horn.rotation.y += 0.01;
-  renderer.render(scene, camera);
+  requestAnimationFrame(render);
 }
