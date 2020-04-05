@@ -22,7 +22,7 @@ animations.push(false);
 animations.push(false);
 
 init();
-document.getElementById("anim1").onclick = function() {
+document.getElementById("anim1").onclick = function () {
   document.getElementById("anim" + (1).toString()).disabled = true;
   animations[0] = true;
   animations.forEach((val, index) => {
@@ -32,10 +32,10 @@ document.getElementById("anim1").onclick = function() {
     }
   });
   horn.rotation.y = 0;
-  animateClockwise((90 * Math.PI) / 180);
+  animateClockwise((90 * Math.PI) / 180, 0);
 };
 
-document.getElementById("anim2").onclick = function() {
+document.getElementById("anim2").onclick = function () {
   document.getElementById("anim" + (2).toString()).disabled = true;
   animations[1] = true;
   animations.forEach((val, index) => {
@@ -45,7 +45,7 @@ document.getElementById("anim2").onclick = function() {
     }
   });
   horn.rotation.y = 0;
-  animateCounterClockwise((90 * Math.PI) / 180);
+  animateCounterClockwise((90 * Math.PI) / 180, 1);
 };
 
 function init() {
@@ -87,11 +87,11 @@ function init() {
    */
 
   const plyLoader = new PLYLoader();
-  plyLoader.load("../ply/servo.ply", ply => {
+  plyLoader.load("../ply/servo.ply", (ply) => {
     ply.computeVertexNormals();
     const material = new THREE.MeshStandardMaterial({
       color: 0x0055ff,
-      flatShading: true
+      flatShading: true,
     });
     const mesh = new THREE.Mesh(ply, material);
     mesh.castShadow = true;
@@ -99,12 +99,12 @@ function init() {
     scene.add(mesh);
   });
 
-  plyLoader.load("../ply/horn.ply", ply => {
+  plyLoader.load("../ply/horn.ply", (ply) => {
     ply.computeVertexNormals();
 
     const material = new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      flatShading: true
+      flatShading: true,
     });
     horn = new THREE.Mesh(ply, material);
 
@@ -148,7 +148,6 @@ function resizeRendererToDisplaySize(renderer) {
   const height = (canvas.clientHeight * pixelRatio) | 0;
   const needResize = canvas.width !== width || canvas.height !== height;
   if (needResize) {
-    console.log("sice");
     renderer.setSize(width, height, false);
   }
   return needResize;
@@ -163,28 +162,34 @@ function onWindowResize() {
   renderer.render(scene, camera);
 }
 
-function animateClockwise(targetRadian) {
+function animateClockwise(targetRadian, ftnIndex) {
   if (horn.rotation.y >= -targetRadian) {
     horn.rotation.y -= 0.01;
   } else {
-    animations[0] = false;
+    animations[ftnIndex] = false;
+    document.getElementById(
+      "anim" + (ftnIndex + 1).toString()
+    ).disabled = false;
   }
-  if (animations[0]) {
+  if (animations[ftnIndex]) {
     requestAnimationFrame(() => {
-      animateClockwise(targetRadian);
+      animateClockwise(targetRadian, ftnIndex);
     });
   }
 }
 
-function animateCounterClockwise(targetRadian) {
+function animateCounterClockwise(targetRadian, ftnIndex) {
   if (horn.rotation.y <= targetRadian) {
     horn.rotation.y += 0.01;
   } else {
-    animations[1] = false;
+    animations[ftnIndex] = false;
+    document.getElementById(
+      "anim" + (ftnIndex + 1).toString()
+    ).disabled = false;
   }
-  if (animations[1]) {
+  if (animations[ftnIndex]) {
     requestAnimationFrame(() => {
-      animateCounterClockwise(targetRadian);
+      animateCounterClockwise(targetRadian, ftnIndex);
     });
   }
 }
