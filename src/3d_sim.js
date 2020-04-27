@@ -37,6 +37,8 @@ sensorMain();
 
 sensorCanvas.style.display = "none";
 document.getElementById("anim1").onclick = function () {
+  resetAnimation(0, "servo");
+  changePlayButton();
   objects[0].forEach((val) => {
     val.visible = true;
   });
@@ -55,9 +57,10 @@ document.getElementById("anim1").onclick = function () {
     }
   });
   document.getElementById("play").onclick = function () {
+    console.log(objects[0]);
     if (isReset) {
       animations[0] = true;
-      objects[0][1].rotation.y = 0;
+      objects[0][0].rotation.y = 0;
     }
     changePlayButton();
     animateClockwise((90 * Math.PI) / 180, 0, objects[0]);
@@ -73,6 +76,8 @@ $("#sensors").on("hide.bs.collapse", function () {
 });
 
 document.getElementById("anim2").onclick = function () {
+  //resetAnimation(1, "servo");
+  changePlayButton();
   objects[1].forEach((val) => {
     val.visible = true;
   });
@@ -91,9 +96,12 @@ document.getElementById("anim2").onclick = function () {
     }
   });
   document.getElementById("play").onclick = function () {
+    if (isReset) {
+      animations[1] = true;
+      objects[1][0].rotation.y = 0;
+    }
     changePlayButton();
-    objects[1][1].rotation.y = 0;
-    animateCounterClockwise((90 * Math.PI) / 180, 1);
+    animateCounterClockwise((90 * Math.PI) / 180, 0, objects[1]);
   };
 };
 
@@ -111,6 +119,16 @@ function changePlayButton() {
     playID.innerHTML = "Play";
     isReset = false;
     isPlay = false;
+  }
+}
+
+function resetAnimation(objIndex, animation) {
+  isPlay = false;
+  isReset = true;
+  switch (animation) {
+    case "servo":
+      objects[objIndex][0].rotation.y = 0;
+      break;
   }
 }
 
@@ -203,7 +221,7 @@ function loadObject() {
     servo.visible = false;
     servo.castShadow = true;
     servo.receiveShadow = true;
-    objects[0].push(servo);
+    objects[0][1] = servo;
     //objects[1].push(servo);
     objScene.add(servo);
   });
@@ -220,12 +238,10 @@ function loadObject() {
     horn.position.x = -5;
     horn.position.y = -(-15);
     horn.rotation.z = Math.PI;
-    //mesh.position.z = - 0.2;
-    //mesh.scale.multiplyScalar( 0.01 );
 
     horn.castShadow = true;
     horn.receiveShadow = true;
-    objects[0].push(horn);
+    objects[0][0] = horn;
     //objects[1].push(horn);
     objScene.add(horn);
   });
@@ -255,8 +271,8 @@ function onWindowResize(renderer, camera, scene) {
 //****************** ANIMATIONS *******************//
 
 function animateClockwise(targetRadian, ftnIndex, object) {
-  if (object[1].rotation.y >= -targetRadian) {
-    object[1].rotation.y -= 0.01;
+  if (object[0].rotation.y >= -targetRadian) {
+    object[0].rotation.y -= 0.01;
   } else {
     animations[ftnIndex] = false;
     isReset = true;
@@ -270,8 +286,8 @@ function animateClockwise(targetRadian, ftnIndex, object) {
 }
 
 function animateCounterClockwise(targetRadian, ftnIndex, object) {
-  if (object[1].rotation.y <= targetRadian) {
-    object[1].rotation.y += 0.01;
+  if (object[0].rotation.y <= targetRadian) {
+    object[0].rotation.y += 0.01;
   } else {
     animations[ftnIndex] = false;
     isReset = true;
