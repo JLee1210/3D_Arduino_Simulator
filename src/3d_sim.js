@@ -76,7 +76,7 @@ $("#sensors").on("hide.bs.collapse", function () {
 });
 
 document.getElementById("anim2").onclick = function () {
-  //resetAnimation(1, "servo");
+  resetAnimation(1, "motor");
   changePlayButton();
   objects[1].forEach((val) => {
     val.visible = true;
@@ -96,12 +96,12 @@ document.getElementById("anim2").onclick = function () {
     }
   });
   document.getElementById("play").onclick = function () {
-    if (isReset) {
+    if (!isPlay) {
+      console.log("sice");
       animations[1] = true;
-      objects[1][0].rotation.y = 0;
     }
     changePlayButton();
-    animateCounterClockwise((90 * Math.PI) / 180, 0, objects[1]);
+    animateForward(1, 5, 1);
   };
 };
 
@@ -164,7 +164,9 @@ function objMain() {
    */
   window.addEventListener(
     "resize",
-    onWindowResize(objRenderer, objCamera, objScene),
+    function () {
+      onWindowResize(objRenderer, objCamera, objScene);
+    },
     false
   );
   objRender();
@@ -202,7 +204,9 @@ function sensorMain() {
    */
   window.addEventListener(
     "resize",
-    onWindowResize(sensorRenderer, sensorCamera, sensorScene),
+    function () {
+      onWindowResize(sensorRenderer, sensorCamera, sensorScene);
+    },
     false
   );
   sensorRender();
@@ -268,7 +272,7 @@ function loadObject() {
         child.geometry.center();
       }
     });
-    wheel.visible = true;
+    wheel.visible = false;
     wheel.position.x = -10;
     wheel.position.y = -3;
     wheel.position.z = 10;
@@ -296,7 +300,7 @@ function loadObject() {
         child.geometry.center();
       }
     });
-    wheel.visible = true;
+    wheel.visible = false;
     wheel.position.x = 10;
     wheel.position.y = -3;
     wheel.position.z = 10;
@@ -324,7 +328,7 @@ function loadObject() {
         child.geometry.center();
       }
     });
-    motor.visible = true;
+    motor.visible = false;
     motor.position.x = 0;
     motor.position.y = 0;
     motor.position.z = 0;
@@ -389,9 +393,11 @@ function onWindowResize(renderer, camera, scene) {
 
 //****************** ANIMATIONS *******************//
 
-function animateClockwise(targetRadian, ftnIndex, object) {
-  if (object[0].rotation.y >= -targetRadian) {
-    object[0].rotation.y -= 0.01;
+let timeStamp = null;
+
+function animateClockwise(targetRadian, ftnIndex) {
+  if (objects[ftnIndex][0].rotation.y >= -targetRadian) {
+    objects[ftnIndex][0].rotation.y -= 0.01;
   } else {
     animations[ftnIndex] = false;
     isReset = true;
@@ -399,14 +405,14 @@ function animateClockwise(targetRadian, ftnIndex, object) {
   }
   if (animations[ftnIndex] && isPlay) {
     requestAnimationFrame(() => {
-      animateClockwise(targetRadian, ftnIndex, object);
+      animateClockwise(targetRadian, ftnIndex);
     });
   }
 }
 
-function animateCounterClockwise(targetRadian, ftnIndex, object) {
-  if (object[0].rotation.y <= targetRadian) {
-    object[0].rotation.y += 0.01;
+function animateCounterClockwise(targetRadian, ftnIndex) {
+  if (objects[ftnIndex][0].rotation.y <= targetRadian) {
+    objects[ftnIndex][0].rotation.y += 0.01;
   } else {
     animations[ftnIndex] = false;
     isReset = true;
@@ -418,6 +424,30 @@ function animateCounterClockwise(targetRadian, ftnIndex, object) {
     });
   }
 }
+
+function animateForward(currSec, maxSec, ftnIndex) {
+  if (!timeStamp) {
+    timeStamp = currSec;
+  }
+  let progress = currSec - timeStamp;
+  progress *= 0.001; // convert time to seconds
+  if (progress < maxSec) {
+    objects[ftnIndex][0].rotation.x -= 0.01;
+    objects[ftnIndex][1].rotation.x -= 0.01;
+  } else {
+    animations[ftnIndex] = false;
+    isPlay = false;
+    document.getElementById("play").innerHTML = "Play";
+    timeStamp = currSec;
+  }
+  if (animations[ftnIndex] && isPlay) {
+    requestAnimationFrame((time) => {
+      animateForward(time, maxSec, ftnIndex);
+    });
+  }
+}
+
+//****************** ANIMATIONS *******************//
 
 function objRender() {
   objRenderer.render(objScene, objCamera);
