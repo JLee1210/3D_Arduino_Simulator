@@ -2,7 +2,7 @@
 Simulator of Arduino components for the StoryMakAR project. 
 
 ## Installation
-Run `npm install` before running the program or `npm install three --save-dev`<br>
+Run `npm install` before running the program or `npm install three --save-dev`from the root folder<br>
 Then, use servez or some other server to run the code on `simulator.html`. To download servez, follow the guidelines here https://threejsfundamentals.org/threejs/lessons/threejs-setup.html
 
 ## File Directory
