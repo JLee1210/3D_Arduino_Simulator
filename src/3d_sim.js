@@ -1,6 +1,26 @@
 import * as THREE from "../node_modules/three/build/three.module.js";
-import { PLYLoader } from "../node_modules/three/examples/jsm/loaders/PLYLoader.js";
 import { OrbitControls } from "../node_modules/three/examples/jsm/controls/OrbitControls.js";
+
+import {
+  animateClockwise,
+  animateCounterClockwise,
+} from "./animations/servo.js";
+
+import {
+  animateRight,
+  animateLeft,
+  animateBackward,
+  animateForward,
+} from "./animations/motor.js";
+
+import { loadSensor, loadObject } from "./helpers/partsLoader.js";
+import {
+  resizeRendererToDisplaySize,
+  onWindowResize,
+  resizeCameraControls,
+} from "./helpers/resizeFuncs.js";
+
+import globalVals from "./globalVars.js";
 
 const fov = 100; // field of view
 const aspect = window.innerWidth / window.innerHeight; // display aspect (default: 300x150)
@@ -19,23 +39,62 @@ const sensorControls = new OrbitControls(sensorCamera, sensorCanvas);
 const sensorScene = new THREE.Scene();
 const sensorRenderer = new THREE.WebGLRenderer({ canvas: sensorCanvas });
 
-const plyLoader = new PLYLoader();
-
-// let horn;
-// let servo;
-
-const objects = new Array(9);
-const animations = [];
-
+const { animations, objects, sensors } = globalVals;
+const servoFiles = [
+  { name: "horn", color: 0xffffff },
+  { name: "servo", color: 0x0055ff },
+];
+const motorFiles = [
+  { name: "wheel", color: 0x696969 },
+  { name: "wheel", color: 0x696969 },
+  { name: "motor", color: 0x0055ff },
+];
+const ultrasonic = [{ name: "ultrasonic", color: 0x696969 }];
 // Add animation when generating a function
 animations.push(false);
 animations.push(false);
 
 objMain();
-loadObject();
+loadObject(0, "servo", servoFiles, objScene, objCamera, objControls);
+loadObject(1, "motor", motorFiles, objScene, objCamera, objControls);
 sensorMain();
+loadSensor(
+  0,
+  "ultrasonic",
+  ultrasonic,
+  sensorScene,
+  sensorCamera,
+  sensorControls
+);
 
 sensorCanvas.style.display = "none";
+
+$("#sensors").on("show.bs.collapse", function () {
+  sensorCanvas.style.display = "initial";
+  sensorCanvas.style.height = objCanvas.clientHeight + "px";
+  resizeRendererToDisplaySize(sensorRenderer);
+});
+
+$("#sensors").on("hide.bs.collapse", function () {
+  sensorCanvas.style.display = "none";
+});
+
+//********************** SLIDER ************************/
+const range = document.getElementById("range"),
+  rangeV = document.getElementById("sensorSlider"),
+  setValue = () => {
+    const newValue = Number(
+        ((range.value - range.min) * 100) / (range.max - range.min)
+      ),
+      newPosition = 10 - newValue * 0.2;
+    rangeV.innerHTML = `<span>${range.value}</span>`;
+    rangeV.style.left = `calc(${newValue}% + (${newPosition}px))`;
+  };
+document.addEventListener("DOMContentLoaded", setValue);
+range.addEventListener("input", setValue);
+
+//********************** SLIDER ************************/
+
 document.getElementById("anim1").onclick = function () {
   resetAnimation(0, "servo");
   changePlayButton();
@@ -49,31 +108,19 @@ document.getElementById("anim1").onclick = function () {
       });
     }
   });
-  animations[0] = true;
   animations.forEach((val, index) => {
     if (index !== 0 && val != undefined) {
       animations[index] = false;
-      document.getElementById("anim" + (index + 1).toString()).disabled = false;
     }
   });
   document.getElementById("play").onclick = function () {
-    console.log(objects[0]);
-    if (isReset) {
-      animations[0] = true;
-      objects[0][0].rotation.y = 0;
+    if (globalVals.isReset) {
+      resetAnimation(0, "servo");
     }
     changePlayButton();
-    animateClockwise((90 * Math.PI) / 180, 0, objects[0]);
+    animateClockwise((90 * Math.PI) / 180, 0, objects);
   };
 };
-
-$("#sensors").on("show.bs.collapse", function () {
-  sensorCanvas.style.display = "initial";
-});
-
-$("#sensors").on("hide.bs.collapse", function () {
-  sensorCanvas.style.display = "none";
-});
 
 document.getElementById("anim2").onclick = function () {
   resetAnimation(1, "motor");
@@ -88,46 +135,66 @@ document.getElementById("anim2").onclick = function () {
       });
     }
   });
-  animations[1] = true;
   animations.forEach((val, index) => {
     if (index !== 1) {
       animations[index] = false;
-      document.getElementById("anim" + (index + 1).toString()).disabled = false;
     }
   });
   document.getElementById("play").onclick = function () {
-    if (!isPlay) {
-      console.log("sice");
-      animations[1] = true;
+    if (globalVals.isReset) {
+      resetAnimation(1, "motor");
     }
     changePlayButton();
-    animateForward(1, 5, 1);
+    animateRight(globalVals.timeStamp, 5, 1);
   };
 };
 
-let isPlay = false;
-let isReset = false;
+document.getElementById("sensor1").onclick = function () {
+  sensorControls.reset();
+
+  sensors[0].forEach((val) => {
+    val.visible = true;
+  });
+  sensors.forEach((val, index) => {
+    if (index !== 0 && val != undefined) {
+      val.forEach((obj) => {
+        obj.visible = false;
+      });
+    }
+  });
+};
+
 function changePlayButton() {
   const playID = document.getElementById("play");
+  const { isPlay, isReset } = globalVals;
   if (!isPlay && !isReset) {
     playID.innerHTML = "Pause";
-    isPlay = true;
+    globalVals.isPlay = true;
   } else if (isPlay && !isReset) {
     playID.innerHTML = "Resume";
-    isPlay = false;
+    globalVals.isPlay = false;
   } else {
     playID.innerHTML = "Play";
-    isReset = false;
-    isPlay = false;
+    globalVals.isReset = false;
+    globalVals.isPlay = false;
   }
 }
 
 function resetAnimation(objIndex, animation) {
-  isPlay = false;
-  isReset = true;
+  animations[objIndex] = true;
+  globalVals.isPlay = false;
+  globalVals.isReset = true;
+  const obj = objects[objIndex];
   switch (animation) {
     case "servo":
-      objects[objIndex][0].rotation.y = 0;
+      objControls.reset();
+      obj[0].rotation.y = 0;
+      break;
+    case "motor":
+      objControls.reset();
+      globalVals.timeStamp = globalVals.currTime;
+      obj[0].rotation.x = 0;
+      obj[1].rotation.x = 0;
       break;
   }
 }
@@ -189,6 +256,7 @@ function sensorMain() {
   /*
    * ------------- LIGHTING ------------
    */
+
   const light_d1 = new THREE.DirectionalLight(0xffffff);
   light_d1.position.set(1, 1, 1);
   sensorScene.add(light_d1);
@@ -199,9 +267,11 @@ function sensorMain() {
 
   const light_a = new THREE.AmbientLight(0x222222);
   sensorScene.add(light_a);
+
   /*
    * ------------- LIGHTING ------------
    */
+
   window.addEventListener(
     "resize",
     function () {
@@ -211,243 +281,6 @@ function sensorMain() {
   );
   sensorRender();
 }
-
-function loadObject() {
-  objects[0] = [];
-  objects[1] = [];
-  plyLoader.load("../ply/horn.ply", (ply) => {
-    ply.computeVertexNormals();
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xffffff, // white
-      flatShading: true,
-    });
-    let horn = new THREE.Mesh(ply, material);
-    horn.traverse(function (child) {
-      if (child instanceof THREE.Mesh) {
-        child.geometry.center();
-      }
-    });
-    horn.visible = false;
-    horn.position.x = -5;
-    horn.position.y = -(-15);
-    horn.rotation.z = Math.PI;
-
-    horn.castShadow = true;
-    horn.receiveShadow = true;
-    objects[0][0] = horn;
-    //objects[1].push(horn);
-    objScene.add(horn);
-  });
-
-  plyLoader.load("../ply/servo.ply", (ply) => {
-    ply.computeVertexNormals();
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x0055ff,
-      flatShading: true,
-    });
-    let servo = new THREE.Mesh(ply, material);
-    servo.traverse(function (child) {
-      if (child instanceof THREE.Mesh) {
-        child.geometry.center();
-      }
-    });
-    servo.visible = false;
-    servo.castShadow = true;
-    servo.receiveShadow = true;
-    objects[0][1] = servo;
-    //objects[1].push(servo);
-    objScene.add(servo);
-    resizeCameraControls(servo);
-  });
-
-  plyLoader.load("../ply/Wheel.ply", (ply) => {
-    ply.computeVertexNormals();
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x696969, // white
-      flatShading: true,
-    });
-    let wheel = new THREE.Mesh(ply, material);
-    wheel.traverse(function (child) {
-      if (child instanceof THREE.Mesh) {
-        child.geometry.center();
-      }
-    });
-    wheel.visible = false;
-    wheel.position.x = -10;
-    wheel.position.y = -3;
-    wheel.position.z = 10;
-    wheel.rotation.z = Math.PI;
-    wheel.scale.y = 0.3;
-    wheel.scale.x = 0.3;
-    wheel.scale.z = 0.3;
-
-    wheel.castShadow = true;
-    wheel.receiveShadow = true;
-    objects[1][0] = wheel;
-    objScene.add(wheel);
-    //resizeCameraControls(wheel);
-  });
-
-  plyLoader.load("../ply/Wheel.ply", (ply) => {
-    ply.computeVertexNormals();
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x696969, // white
-      flatShading: true,
-    });
-    let wheel = new THREE.Mesh(ply, material);
-    wheel.traverse(function (child) {
-      if (child instanceof THREE.Mesh) {
-        child.geometry.center();
-      }
-    });
-    wheel.visible = false;
-    wheel.position.x = 10;
-    wheel.position.y = -3;
-    wheel.position.z = 10;
-    wheel.rotation.z = 0;
-    wheel.scale.y = 0.3;
-    wheel.scale.x = 0.3;
-    wheel.scale.z = 0.3;
-
-    wheel.castShadow = true;
-    wheel.receiveShadow = true;
-    objects[1][1] = wheel;
-    objScene.add(wheel);
-    //resizeCameraControls(wheel);
-  });
-  plyLoader.load("../ply/DC_motor_2.ply", (ply) => {
-    ply.computeVertexNormals();
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x0055ff, // blue
-      flatShading: true,
-    });
-
-    let motor = new THREE.Mesh(ply, material);
-    motor.traverse(function (child) {
-      if (child instanceof THREE.Mesh) {
-        child.geometry.center();
-      }
-    });
-    motor.visible = false;
-    motor.position.x = 0;
-    motor.position.y = 0;
-    motor.position.z = 0;
-    motor.scale.y = 0.5;
-    motor.scale.z = 0.5;
-    motor.scale.x = 0.5;
-
-    motor.rotation.x = Math.PI;
-    //motor.rotation.z = Math.PI;
-
-    motor.castShadow = true;
-    motor.receiveShadow = true;
-    objects[1][2] = motor;
-    objScene.add(motor);
-    resizeCameraControls(motor);
-  });
-}
-
-const boundingBox = new THREE.Box3();
-const offset = 10 || 1.25;
-
-function resizeCameraControls(obj) {
-  boundingBox.setFromObject(obj);
-  const center = boundingBox.getCenter();
-  const size = boundingBox.getSize();
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const fov = objCamera.fov * (Math.PI / 180);
-  let cameraZ = Math.abs((maxDim / 3.5) * Math.tan(fov * 2));
-  cameraZ *= offset;
-  const minZ = boundingBox.min.z;
-  const cameraToFarEdge = minZ < 0 ? -minZ + cameraZ : cameraZ - minZ;
-  objCamera.position.z = center.z + cameraZ;
-
-  objCamera.lookAt(center);
-  objControls.target = center;
-
-  // prevent camera from zooming out far enough to create far plane cutoff
-  objControls.maxDistance = cameraToFarEdge * 4;
-  objControls.saveState();
-}
-
-function resizeRendererToDisplaySize(renderer) {
-  const canvas = renderer.domElement;
-  const pixelRatio = window.devicePixelRatio;
-  const width = (canvas.clientWidth * pixelRatio) | 0;
-  const height = (canvas.clientHeight * pixelRatio) | 0;
-  const needResize = canvas.width !== width || canvas.height !== height;
-  if (needResize) {
-    renderer.setSize(width, height, false);
-  }
-  return needResize;
-}
-
-function onWindowResize(renderer, camera, scene) {
-  if (resizeRendererToDisplaySize(renderer)) {
-    const canvas = renderer.domElement;
-    camera.aspect = canvas.clientWidth / canvas.clientHeight;
-    camera.updateProjectionMatrix();
-  }
-  renderer.render(scene, camera);
-}
-
-//****************** ANIMATIONS *******************//
-
-let timeStamp = null;
-
-function animateClockwise(targetRadian, ftnIndex) {
-  if (objects[ftnIndex][0].rotation.y >= -targetRadian) {
-    objects[ftnIndex][0].rotation.y -= 0.01;
-  } else {
-    animations[ftnIndex] = false;
-    isReset = true;
-    document.getElementById("play").innerHTML = "Reset";
-  }
-  if (animations[ftnIndex] && isPlay) {
-    requestAnimationFrame(() => {
-      animateClockwise(targetRadian, ftnIndex);
-    });
-  }
-}
-
-function animateCounterClockwise(targetRadian, ftnIndex) {
-  if (objects[ftnIndex][0].rotation.y <= targetRadian) {
-    objects[ftnIndex][0].rotation.y += 0.01;
-  } else {
-    animations[ftnIndex] = false;
-    isReset = true;
-    document.getElementById("play").innerHTML = "Reset";
-  }
-  if (animations[ftnIndex] && isPlay) {
-    requestAnimationFrame(() => {
-      animateCounterClockwise(targetRadian, ftnIndex);
-    });
-  }
-}
-
-function animateForward(currSec, maxSec, ftnIndex) {
-  if (!timeStamp) {
-    timeStamp = currSec;
-  }
-  let progress = currSec - timeStamp;
-  progress *= 0.001; // convert time to seconds
-  if (progress < maxSec) {
-    objects[ftnIndex][0].rotation.x -= 0.01;
-    objects[ftnIndex][1].rotation.x -= 0.01;
-  } else {
-    animations[ftnIndex] = false;
-    isPlay = false;
-    document.getElementById("play").innerHTML = "Play";
-    timeStamp = currSec;
-  }
-  if (animations[ftnIndex] && isPlay) {
-    requestAnimationFrame((time) => {
-      animateForward(time, maxSec, ftnIndex);
-    });
-  }
-}
-
-//****************** ANIMATIONS *******************//
 
 function objRender() {
   objRenderer.render(objScene, objCamera);
