@@ -40,6 +40,10 @@ const sensorScene = new THREE.Scene();
 const sensorRenderer = new THREE.WebGLRenderer({ canvas: sensorCanvas });
 
 const { animations, objects, sensors } = globalVals;
+
+/* Example of how the json object will look like in the DeviceMakAR when a
+   function is created and pass its info to simulator */
+
 const servoFiles = [
   { name: "horn", color: 0xffffff },
   { name: "servo", color: 0x0055ff },
@@ -50,10 +54,12 @@ const motorFiles = [
   { name: "motor", color: 0x0055ff },
 ];
 const ultrasonic = [{ name: "ultrasonic", color: 0x696969 }];
-// Add animation when generating a function
+
+// Add animation state when generating a function in DeviceMakAR
 animations.push(false);
 animations.push(false);
 
+// This is where the objects are loaded and created. Always call main first before loading.
 objMain();
 loadObject(0, "servo", servoFiles, objScene, objCamera, objControls);
 loadObject(1, "motor", motorFiles, objScene, objCamera, objControls);
@@ -67,8 +73,10 @@ loadSensor(
   sensorControls
 );
 
+// initially hide the canvas which displays sensors
 sensorCanvas.style.display = "none";
 
+// show canvas if collapsed, vice versa
 $("#sensors").on("show.bs.collapse", function () {
   sensorCanvas.style.display = "initial";
   sensorCanvas.style.height = objCanvas.clientHeight + "px";
@@ -79,7 +87,7 @@ $("#sensors").on("hide.bs.collapse", function () {
   sensorCanvas.style.display = "none";
 });
 
-//********************** SLIDER ************************/
+//********************** SENSOR SLIDER ************************/
 const range = document.getElementById("range"),
   rangeV = document.getElementById("sensorSlider"),
   setValue = () => {
@@ -93,8 +101,16 @@ const range = document.getElementById("range"),
 document.addEventListener("DOMContentLoaded", setValue);
 range.addEventListener("input", setValue);
 
-//********************** SLIDER ************************/
+//********************** SENSOR SLIDER ************************/
 
+/*
+ * This function is an example of what would be called when a non-sensor function is created in DeviceMakAR.
+ * Essentially, "anim1" would be replaced with the function name and the hardcoded index values
+ * will be also replaced with the function number along with the hardcoded object type strings ("servo").
+ * Everything beside the documet.getElementById("play").onclick function will be consistent for any function.
+ * When this button is clicked, it will reveal the desired objects of the function and hide all the others.
+ * Additionally, it will turn on this function's animation state and set the play button to play the desired animation.
+ */
 document.getElementById("anim1").onclick = function () {
   resetAnimation(0, "servo");
   changePlayButton();
@@ -113,6 +129,8 @@ document.getElementById("anim1").onclick = function () {
       animations[index] = false;
     }
   });
+
+  // set the play button function - this is the only part that will be unique for every different function.
   document.getElementById("play").onclick = function () {
     if (globalVals.isReset) {
       resetAnimation(0, "servo");
@@ -151,7 +169,6 @@ document.getElementById("anim2").onclick = function () {
 
 document.getElementById("sensor1").onclick = function () {
   sensorControls.reset();
-
   sensors[0].forEach((val) => {
     val.visible = true;
   });
@@ -164,6 +181,7 @@ document.getElementById("sensor1").onclick = function () {
   });
 };
 
+// This function is used to change the state of the play/pause/etc. button
 function changePlayButton() {
   const playID = document.getElementById("play");
   const { isPlay, isReset } = globalVals;
@@ -180,6 +198,7 @@ function changePlayButton() {
   }
 }
 
+// This function is used to reset an animation to its initial state along with the camera controls.
 function resetAnimation(objIndex, animation) {
   animations[objIndex] = true;
   globalVals.isPlay = false;
@@ -199,6 +218,7 @@ function resetAnimation(objIndex, animation) {
   }
 }
 
+// This is the main function for the objCanvas and it initializes the canvas based on desired values.
 function objMain() {
   objCamera.position.z = 50;
   if (resizeRendererToDisplaySize(objRenderer)) {
@@ -239,6 +259,7 @@ function objMain() {
   objRender();
 }
 
+// This is the main function for the sensorCanvas and it initializes the canvas based on desired values.
 function sensorMain() {
   sensorCamera.position.z = 50;
   if (resizeRendererToDisplaySize(sensorRenderer)) {
@@ -281,6 +302,11 @@ function sensorMain() {
   );
   sensorRender();
 }
+
+/*
+ * These renderer functions are necessary for three.js to work. Essentially, they constantly
+ * updates and renders the canvas to display the desired objects.
+ */
 
 function objRender() {
   objRenderer.render(objScene, objCamera);

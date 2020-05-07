@@ -1,7 +1,20 @@
 import * as THREE from "../../node_modules/three/build/three.module.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+
+/*
+ * This file contains necessary functions to resize the three.js camera, renderer, etc.
+ */
 
 const boundingBox = new THREE.Box3();
 const offset = 10 || 1.25;
+
+/**
+ * resizeCameraControls()
+ * * This function automatically resizes the camera based off of the obj object positions.
+ * @param {THREE.Geometry} obj the object to resize the camera controls based off of
+ * @param {THREE.PerspectiveCamera} objCamera   the three.js PerspectiveCamera
+ * @param {THREE.OrbitControls} objControls the three.js OrbitControls
+ */
 
 export function resizeCameraControls(obj, objCamera, objControls) {
   boundingBox.setFromObject(obj);
@@ -23,6 +36,13 @@ export function resizeCameraControls(obj, objCamera, objControls) {
   objControls.saveState();
 }
 
+/**
+ * resizeRendererToDisplaySize()
+ * * This function resizes the renderer based on the size of the window/canvas
+ * * in order to correctly display the optimal pixelRatio for the given size.
+ * @param {THREE.WebGLRenderer} renderer the three.js WebGLRenderer
+ */
+
 export function resizeRendererToDisplaySize(renderer) {
   const canvas = renderer.domElement;
   const pixelRatio = window.devicePixelRatio;
@@ -34,6 +54,15 @@ export function resizeRendererToDisplaySize(renderer) {
   }
   return needResize;
 }
+
+/**
+ * onWindowResize()
+ * * This function resets the camera aspect and renderer's pixel ratio
+ * * if the window screen changes size (minimize/maximize).
+ * @param {THREE.WebGLRenderer} renderer the three.js WebGLRenderer
+ * @param {THREE.PerspectiveCamera} camera   the three.js PerspectiveCamera
+ * @param {THREE.Scene} scene    the three.js Scene
+ */
 
 export function onWindowResize(renderer, camera, scene) {
   if (resizeRendererToDisplaySize(renderer)) {

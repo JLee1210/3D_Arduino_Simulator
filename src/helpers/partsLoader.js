@@ -2,9 +2,28 @@ import * as THREE from "../../node_modules/three/build/three.module.js";
 import globalVals from "../globalVars.js";
 import { PLYLoader } from "../../node_modules/three/examples/jsm/loaders/PLYLoader.js";
 import { resizeCameraControls } from "./resizeFuncs.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+
+/*
+ * This file contains all the necessary functions to load a ply object.
+ */
 
 const { sensors, objects } = globalVals;
 const plyLoader = new PLYLoader();
+
+/**
+ * loadObject()
+ * * This function takes objFiles and loads them using a plyLoader. Then
+ * * it stores the objects respectively in the objects array associated with
+ * * the objIndex. objName is used to distinguish the positioning of the object
+ * * via setPositions() method.
+ * @param {integer} objIndex index of object to access in the objects array
+ * @param {String} objName  name of object we want to load
+ * @param {Array} objFiles array of names of the ply file we want to load
+ * @param {THREE.Scene} scene    the three.js Scene
+ * @param {THREE.PerspectiveCamera} camera   the three.js PerspectiveCamera
+ * @param {THREE.OrbitControls} controls the three.js OrbitControls
+ */
 
 export function loadObject(
   objIndex,
@@ -42,6 +61,20 @@ export function loadObject(
   });
 }
 
+/**
+ * loadObject()
+ * * This function takes sensorFiles and loads them using a plyLoader. Then
+ * * it stores the sensors respectively in the sensors array associated with
+ * * the sensorIndex. sensorName is used to distinguish the positioning of the sensor
+ * * via setPositions() method.
+ * @param {integer} sensorIndex index of sensor to access in the sensors array
+ * @param {String} sensorName  name of sensor we want to load
+ * @param {Array} sensorFiles array of names of the ply file we want to load
+ * @param {THREE.Scene} scene    the three.js Scene
+ * @param {THREE.PerspectiveCamera} camera   the three.js PerspectiveCamera
+ * @param {THREE.OrbitControls} controls the three.js OrbitControls
+ */
+
 export function loadSensor(
   sensorIndex,
   sensorName,
@@ -77,6 +110,16 @@ export function loadSensor(
     });
   });
 }
+
+/**
+ * setPositions()
+ * * This function takes in an obj and updates the positions based on the
+ * * objType value. The objIndice is used to update specific parts if the array
+ * * length of the objects/sensors is greater than 1.
+ * @param {THREE.Geometry} obj the object we want to update the positions
+ * @param {String} objType the type of the object
+ * @param {integer} objIndice
+ */
 
 function setPositions(obj, objType, objIndice) {
   switch (objType) {
