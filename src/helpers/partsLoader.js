@@ -2,7 +2,6 @@ import * as THREE from "../../node_modules/three/build/three.module.js";
 import globalVals from "../globalVars.js";
 import { PLYLoader } from "../../node_modules/three/examples/jsm/loaders/PLYLoader.js";
 import { resizeCameraControls } from "./resizeFuncs.js";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 /*
  * This file contains all the necessary functions to load a ply object.

@@ -1,5 +1,4 @@
 import * as THREE from "../../node_modules/three/build/three.module.js";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 /*
  * This file contains necessary functions to resize the three.js camera, renderer, etc.
