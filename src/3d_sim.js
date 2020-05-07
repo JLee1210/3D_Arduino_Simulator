@@ -204,6 +204,7 @@ function resetAnimation(objIndex, animation) {
   globalVals.isPlay = false;
   globalVals.isReset = true;
   const obj = objects[objIndex];
+  console.log(obj);
   switch (animation) {
     case "servo":
       objControls.reset();
@@ -308,12 +309,14 @@ function sensorMain() {
  * updates and renders the canvas to display the desired objects.
  */
 
-function objRender() {
+function objRender(time) {
+  globalVals.currTime = time;
   objRenderer.render(objScene, objCamera);
   requestAnimationFrame(objRender);
 }
 
-function sensorRender() {
+function sensorRender(time) {
+  globalVals.currTime = time;
   sensorRenderer.render(sensorScene, sensorCamera);
   requestAnimationFrame(sensorRender);
 }

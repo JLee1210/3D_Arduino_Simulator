@@ -77,6 +77,7 @@ export function animateBackward(currSec, maxSec, ftnIndex) {
  */
 
 export function animateRight(currSec, maxSec, ftnIndex) {
+  console.log(currSec, globalVals.timeStamp);
   let progress = currSec - globalVals.timeStamp;
   progress *= 0.001; // convert time to seconds
   if (progress < maxSec) {
