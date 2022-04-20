@@ -16,6 +16,13 @@
     <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
   <body>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../node_modules/three/build/three.module.js"
+        }
+      }
+    </script>
     <script type="module" src="/src/3d_sim.js"></script>
     <div style="max-width: 100%;">
       <canvas id="objGrid"></canvas>
